@@ -36,6 +36,10 @@ class PharmacyApp(User, Product):
             
             self.btn_manage_products = tk.Button(self.root, text="Gérer les produits", command=self.show_product_management_page, font=("Helvetica", 12))
             self.btn_manage_products.pack(pady=10)
+            
+            if self.current_user['is_admin'] == 1:
+                self.btn_manage_products = tk.Button(self.root, text="Gérer les pharmaciens", command=self.pharmacist_management_page, font=("Helvetica", 12))
+                self.btn_manage_products.pack(pady=10)
 
             self.btn_logout = tk.Button(self.root, text="Déconnexion", command=self.logout, font=("Helvetica", 12))
             self.btn_logout.pack(pady=10)

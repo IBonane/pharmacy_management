@@ -1,6 +1,6 @@
 import sys
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, ttk
 import hashlib
 import mysql.connector as mc
 
@@ -129,11 +129,18 @@ class User:
         if result:
             messagebox.showinfo("Succès", "Connexion réussie.")
             self.is_logged_in = True
+            
+            str_planning = result[4]
+            
+            if str_planning is None:
+                str_planning = 'Aucun planning.'
+                
 
             self.current_user = {
                 'firstname':result[1], 
                 'lastname':result[2], 
-                'is_admin':result[4],
+                'is_admin':result[5],
+                'planning': str_planning,
                 'email':username
             }
 
@@ -154,18 +161,16 @@ class User:
         self.label_firstname = tk.Label(self.root, text=f"Nom : {self.current_user['firstname']}", font=("Helvetica", 14))
         self.label_lastname = tk.Label(self.root, text=f"Prénom : {self.current_user['lastname']}", font=("Helvetica", 14))
         self.label_username = tk.Label(self.root, text=f"Nom d'utilisateur : {self.current_user['email']}", font=("Helvetica", 14))
+        self.label_planning = tk.Label(self.root, text=f"Votre planning : {self.current_user['planning']}", font=("Helvetica", 14))
 
         self.label_firstname.pack(pady=10)
         self.label_lastname.pack(pady=10)
         self.label_username.pack(pady=10)
+        self.label_planning.pack(pady=10)
 
         # Ajouter un bouton pour accéder à la page d'édition du profil
         self.btn_edit_profile = tk.Button(self.root, text="Éditer le profil", command=self.edit_profile_page, font=("Helvetica", 12))
         self.btn_edit_profile.pack(pady=10)
-
-        # Ajouter un bouton pour supprimer le profil
-        self.btn_delete_profile = tk.Button(self.root, text="Supprimer le profil", command=self.delete_profile, font=("Helvetica", 12), fg="red")
-        self.btn_delete_profile.pack(pady=10)
 
         # Ajouter un bouton de retour à la page d'accueil
         self.btn_back_home = tk.Button(self.root, text="Retour à l'accueil", command=self.home_page, font=("Helvetica", 12), padx=10, pady=5)
@@ -244,21 +249,150 @@ class User:
 
             # Rediriger vers la page de connexion après l'inscription réussie
             self.show_profile()
+            
+    #Gestion de la liste des pharmaciens
+    def pharmacist_management_page(self):
+        for widget in self.root.winfo_children():
+            widget.pack_forget()
 
-    def delete_profile(self):
-        # Boîte de dialogue de confirmation
-        response = messagebox.askyesno("Confirmation", "Voulez-vous vraiment supprimer votre profil ?")
+        label_manage_pharmacist = tk.Label(self.root, text="Gestion des pharmaciens", font=("Helvetica", 16))
+        label_manage_pharmacist.pack(pady=10)
 
-        if response:
-            # L'utilisateur a confirmé la suppression
+        self.tree = ttk.Treeview(self.root, columns=("ID", "FirstName", "LastName", "UserName", "Planning"), show="headings")
+        self.tree.heading("ID", text="ID")
+        self.tree.heading("FirstName", text="Nom")
+        self.tree.heading("LastName", text="Prénom")
+        self.tree.heading("UserName", text="Nom d'utilisateur")
+        self.tree.heading("Planning", text="Planning")
+
+        self.tree.column("ID", width=50, anchor=tk.CENTER)
+        self.tree.column("FirstName", width=220, anchor=tk.CENTER)
+        self.tree.column("LastName", width=120, anchor=tk.CENTER)
+        self.tree.column("UserName", width=220, anchor=tk.CENTER)
+        self.tree.column("Planning", width=220, anchor=tk.CENTER)
+
+        self.show_pharmacists_list_on_page()
+
+        for col in ["ID", "FirstName", "LastName", "UserName", "Planning"]:
+            self.tree.column(col, anchor=tk.CENTER)
+
+        self.tree.pack(pady=10)
+
+        btn_planning = tk.Button(self.root, text="Affecter un planning au pharmacien", command=self.planning, font=("Helvetica", 12))
+        btn_planning.pack(pady=10)
+
+        btn_delete_product = tk.Button(self.root, text="Supprimer un pharmacien", command=self.delete_pharmacist, font=("Helvetica", 12), fg="red")
+        btn_delete_product.pack(pady=10)
+
+        # Ajouter des boutons pour naviguer entre les pages
+        btn_prev_page = tk.Button(self.root, text="Page précédente", command=self.show_previous_page, font=("Helvetica", 12))
+        btn_prev_page.pack(pady=10)
+
+        btn_next_page = tk.Button(self.root, text="Page suivante", command=self.show_next_page, font=("Helvetica", 12))
+        btn_next_page.pack(pady=10)
+
+        btn_back_home = tk.Button(self.root, text="Retour à l'accueil", command=self.home_page, font=("Helvetica", 12), padx=10, pady=5)
+        btn_back_home.pack(pady=10)
+
+    def show_pharmacists_list_on_page(self):
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+
+        start_index = (self.current_page - 1) * self.page_size
+        end_index = start_index + self.page_size
+
+        pharmacists_list = self.pharmacists_list()
+        for i, pharmacist in enumerate(pharmacists_list[start_index:end_index], start=1):
+            self.tree.insert("", i, values=(pharmacist[0], pharmacist[1], pharmacist[2], pharmacist[3], pharmacist[4]))
+
+    def show_previous_page(self):
+        if self.current_page > 1:
+            self.current_page -= 1
+            self.show_pharmacists_list_on_page()
+
+    def show_next_page(self):
+        total_pages = -(-len(self.pharmacists_list()) // self.page_size)
+        if self.current_page < total_pages:
+            self.current_page += 1
+            self.show_pharmacists_list_on_page()
+
+    def pharmacists_list(self):
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT id, first_name, last_name, user_name, planning FROM user WHERE is_admin = 0 ORDER BY first_name ASC;")
+        pharmacists = cursor.fetchall()
+        return pharmacists
+
+    def planning(self):
+        selected_item = self.tree.selection()
+
+        if selected_item:
+            # Oublie la page précédente
+            for widget in self.root.winfo_children():
+                widget.pack_forget()
+
+            item_values = self.tree.item(selected_item, "values")
+            self.pharmacist_id = item_values[0]
+
+            # Implémentez la page d'édition du profil
+            self.label_edit_product = tk.Label(self.root, text="Affectation du planning du pharmacien", font=("Helvetica", 16))
+            self.label_edit_product.pack(pady=10)
+
+            # Ajoutez des Entry avec les valeurs par défaut
+            # Liste des jours de la semaine
+            self.days_of_week = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+
+            # Variables Tkinter pour stocker l'état des cases à cocher
+            self.checkbox_vars = [tk.BooleanVar() for _ in range(len(self.days_of_week))]
+            
+            # Ajouter des cases à cocher pour les jours de la semaine
+            for i, day in enumerate(self.days_of_week):
+                checkbox = tk.Checkbutton(self.root, text=day, variable=self.checkbox_vars[i])
+                checkbox.pack(pady=5)
+
+            # Ajouter un bouton de sauvegarde des modifications
+            self.btn_save_changes = tk.Button(self.root, text="Enregistrer les modifications", command=self.save_pharmacist_changes, font=("Helvetica", 12))
+            self.btn_save_changes.pack(pady=20)
+
+            # Ajouter un bouton de retour à la page d'utilisateur
+            self.btn_back_user_page = tk.Button(self.root, text="Retour à l'acceuil", command=self.home_page, font=("Helvetica", 12), padx=10, pady=5)
+            self.btn_back_user_page.pack(pady=10)
+        else:
+            messagebox.showwarning("Sélection nécessaire", "Veuillez sélectionner un pharmacien.")
+            
+    def save_pharmacist_changes(self):
+        # Obtenez le planning choisi
+        selected_days = [self.days_of_week[i] for i, var in enumerate(self.checkbox_vars) if var.get()]
+        result_str = ', '.join(str(item) for item in selected_days)
+        pharmacist = (result_str, self.pharmacist_id)
+
+        cursor = self.conn.cursor()
+        # Insérer le pharmacien dans la base de données
+        cursor.execute("UPDATE user SET planning=%s WHERE id=%s", pharmacist)
+        self.conn.commit()
+
+        messagebox.showinfo("Succès", "Affectation de planning réussie.")
+
+        # Rediriger vers la page de gestion pharmaciens
+        self.pharmacist_management_page()
+
+    def delete_pharmacist(self):
+        selected_item = self.tree.selection()
+        if selected_item:
+            item_values = self.tree.item(selected_item, "values")
+            pharmacist_id = item_values[0]
+
             cursor = self.conn.cursor()
 
             # Supprimer l'utilisateur de la base de données
-            cursor.execute("DELETE FROM user WHERE user_name=%s", (self.current_user['email'],))
+            cursor.execute("DELETE FROM user WHERE id=%s", (pharmacist_id,))
             self.conn.commit()
 
             # Afficher un message de confirmation
-            messagebox.showinfo("Succès", "Profil supprimé avec succès.")
+            messagebox.showinfo("Succès", "pharmacien supprimé avec succès.")
+            
+            # Rediriger vers la page de gestion pharmaciens
+            self.pharmacist_management_page()
 
-            # Déconnecter l'utilisateur
-            self.logout()
+        else:
+            messagebox.showwarning("Sélection nécessaire", "Veuillez sélectionner un pharmacien.")
+
