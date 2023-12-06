@@ -44,12 +44,17 @@ class Product:
             self.tree.column(col, anchor=tk.CENTER)
 
         self.tree.pack(pady=10)
+        
+        if self.is_logged_in and self.current_user['is_admin'] == 1:
 
-        btn_edit_product = tk.Button(self.root, text="Éditer le produit", command=self.edit_product, font=("Helvetica", 12))
-        btn_edit_product.pack(pady=10)
+            btn_add_product = tk.Button(self.root, text="Ajouter un produit", command=self.add_product, font=("Helvetica", 12))
+            btn_add_product.pack(pady=10)
 
-        btn_delete_product = tk.Button(self.root, text="Supprimer le produit", command=self.delete_product, font=("Helvetica", 12), fg="red")
-        btn_delete_product.pack(pady=10)
+            btn_edit_product = tk.Button(self.root, text="Éditer le produit", command=self.edit_product, font=("Helvetica", 12))
+            btn_edit_product.pack(pady=10)
+
+            btn_delete_product = tk.Button(self.root, text="Supprimer le produit", command=self.delete_product, font=("Helvetica", 12), fg="red")
+            btn_delete_product.pack(pady=10)
 
         # Ajouter des boutons pour naviguer entre les pages
         btn_prev_page = tk.Button(self.root, text="Page précédente", command=self.show_previous_page, font=("Helvetica", 12))
@@ -82,27 +87,156 @@ class Product:
 
     def products_list(self):
         cursor = self.conn.cursor()
-        cursor.execute("SELECT id, name, price, stock FROM products;")
+        cursor.execute("SELECT id, name, price, stock FROM products ORDER BY name ASC")
         products = cursor.fetchall()
         return products
+    
+    
+    def add_product(self):
+        # Oublie la page précédente
+        for widget in self.root.winfo_children():
+            widget.pack_forget()
+
+        # Implémentez la page d'édition du profil
+        self.label_edit_product = tk.Label(self.root, text="Page d'édition de produit", font=("Helvetica", 16))
+        self.label_edit_product.pack(pady=10)
+
+        # Ajoutez des Entry avec les valeurs par défaut
+        self.label_edit_name = tk.Label(self.root, text="Nom du produit:", font=("Helvetica", 12))
+        self.entry_edit_name = tk.Entry(self.root, font=("Helvetica", 12))
+
+        self.label_edit_price = tk.Label(self.root, text="prix:", font=("Helvetica", 12))
+        self.entry_edit_price = tk.Entry(self.root, font=("Helvetica", 12))
+
+        self.label_edit_quantity = tk.Label(self.root, text="Stock:", font=("Helvetica", 12))
+        self.entry_edit_quantity = tk.Entry(self.root, font=("Helvetica", 12))
+
+        # Placement des widgets
+        self.label_edit_name.pack(padx=10, pady=10)
+        self.entry_edit_name.pack(padx=10, pady=10)
+
+        self.label_edit_price.pack(padx=10, pady=10)
+        self.entry_edit_price.pack(padx=10, pady=10)
+
+        self.label_edit_quantity.pack(padx=10, pady=10)
+        self.entry_edit_quantity.pack(padx=10, pady=10)
+
+        # Ajouter un bouton de sauvegarde des modifications
+        self.btn_save_changes = tk.Button(self.root, text="Enregistrer les modifications", command=self.save_product_add, font=("Helvetica", 12))
+        self.btn_save_changes.pack(pady=20)
+
+        # Ajouter un bouton de retour à la page d'utilisateur
+        self.btn_back_user_page = tk.Button(self.root, text="Retour à la page d'utilisateur", command=self.home_page, font=("Helvetica", 12), padx=10, pady=5)
+        self.btn_back_user_page.pack(pady=10)
+            
+    def save_product_add(self):
+        # Obtenez les nouvelles valeurs des Entry
+        name = self.entry_edit_name.get()
+        price = self.entry_edit_price.get()
+        stock = self.entry_edit_quantity.get()
+
+        product = (name, price, stock)
+
+        # Vérifier si le nom d'utilisateur existe déjà
+        cursor = self.conn.cursor()
+
+        # Insérer le pharmacien dans la base de données
+        cursor.execute("INSERT INTO products (name, price, stock) VALUES(%s, %s, %s)", product)
+        self.conn.commit()
+
+        messagebox.showinfo("Succès", "Nouveau produit ajoué avec succès.")
+
+        # Rediriger vers la page de produits
+        self.show_product_management_page()
 
     def edit_product(self):
         selected_item = self.tree.selection()
+
         if selected_item:
+            # Oublie la page précédente
+            for widget in self.root.winfo_children():
+                widget.pack_forget()
+
             item_values = self.tree.item(selected_item, "values")
-            product_id = item_values[0]
+            self.product_id = item_values[0]
             product_name = item_values[1]
-            product_quantity = item_values[2]
-            print(f"Éditer le produit : ID={product_id}, Nom={product_name}, Quantité={product_quantity}")
+            product_price = item_values[2]
+            product_quantity = item_values[3]
+
+            # Implémentez la page d'édition du profil
+            self.label_edit_product = tk.Label(self.root, text="Page d'édition de produit", font=("Helvetica", 16))
+            self.label_edit_product.pack(pady=10)
+
+            # Ajoutez des Entry avec les valeurs par défaut
+            self.label_edit_name = tk.Label(self.root, text="Nom du produit:", font=("Helvetica", 12))
+            self.entry_edit_name = tk.Entry(self.root, font=("Helvetica", 12))
+            self.entry_edit_name.insert(0, product_name)  # Valeur par défaut
+
+            self.label_edit_price = tk.Label(self.root, text="prix:", font=("Helvetica", 12))
+            self.entry_edit_price = tk.Entry(self.root, font=("Helvetica", 12))
+            self.entry_edit_price.insert(0, product_price)  # Valeur par défaut
+
+            self.label_edit_quantity = tk.Label(self.root, text="Stock:", font=("Helvetica", 12))
+            self.entry_edit_quantity = tk.Entry(self.root, font=("Helvetica", 12))
+            self.entry_edit_quantity.insert(0, product_quantity)  # Valeur par défaut
+
+            # Placement des widgets
+            self.label_edit_name.pack(padx=10, pady=10)
+            self.entry_edit_name.pack(padx=10, pady=10)
+
+            self.label_edit_price.pack(padx=10, pady=10)
+            self.entry_edit_price.pack(padx=10, pady=10)
+
+            self.label_edit_quantity.pack(padx=10, pady=10)
+            self.entry_edit_quantity.pack(padx=10, pady=10)
+
+            # Ajouter un bouton de sauvegarde des modifications
+            self.btn_save_changes = tk.Button(self.root, text="Enregistrer les modifications", command=self.save_product_changes, font=("Helvetica", 12))
+            self.btn_save_changes.pack(pady=20)
+
+            # Ajouter un bouton de retour à la page d'utilisateur
+            self.btn_back_user_page = tk.Button(self.root, text="Retour à la page d'utilisateur", command=self.home_page, font=("Helvetica", 12), padx=10, pady=5)
+            self.btn_back_user_page.pack(pady=10)
         else:
             messagebox.showwarning("Sélection nécessaire", "Veuillez sélectionner un produit à éditer.")
+            
+    def save_product_changes(self):
+        # Obtenez les nouvelles valeurs des Entry
+        name = self.entry_edit_name.get()
+        price = self.entry_edit_price.get()
+        stock = self.entry_edit_quantity.get()
+
+        product = (name, price, stock, self.product_id)
+
+        # Vérifier si le nom d'utilisateur existe déjà
+        cursor = self.conn.cursor()
+
+        # Insérer le pharmacien dans la base de données
+        cursor.execute("UPDATE products SET name=%s, price=%s, stock=%s WHERE id=%s", product)
+        self.conn.commit()
+
+        messagebox.showinfo("Succès", "Mis à jour du produit réussie.")
+
+        # Rediriger vers la page de produits
+        self.show_product_management_page()
 
     def delete_product(self):
         selected_item = self.tree.selection()
         if selected_item:
             item_values = self.tree.item(selected_item, "values")
             product_id = item_values[0]
-            product_name = item_values[1]
-            print(f"Supprimer le produit : ID={product_id}, Nom={product_name}")
+
+            cursor = self.conn.cursor()
+
+            # Supprimer l'utilisateur de la base de données
+            cursor.execute("DELETE FROM products WHERE id=%s", (product_id,))
+            self.conn.commit()
+
+            # Afficher un message de confirmation
+            messagebox.showinfo("Succès", "produit supprimé avec succès.")
+            
+            # Rediriger vers la page de produits
+            self.show_product_management_page()
+
         else:
             messagebox.showwarning("Sélection nécessaire", "Veuillez sélectionner un produit à supprimer.")

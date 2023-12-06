@@ -129,7 +129,14 @@ class User:
         if result:
             messagebox.showinfo("Succès", "Connexion réussie.")
             self.is_logged_in = True
-            self.current_user = {'firstname':result[1], 'lastname':result[2], 'email':username}
+
+            self.current_user = {
+                'firstname':result[1], 
+                'lastname':result[2], 
+                'is_admin':result[4],
+                'email':username
+            }
+
             self.home_page()
         else:
             messagebox.showerror("Erreur", "Nom d'utilisateur ou mot de passe incorrect.")
@@ -216,8 +223,6 @@ class User:
         new_lastname = self.entry_edit_lastname.get()
         new_username = self.entry_edit_username.get()
         new_password = self.entry_edit_password.get()
-        
-        print('entrée : ', new_password)
 
         # Hacher le mot de passe avant de l'insérer dans la base de données
         hashed_password = hashlib.sha256(new_password.encode()).hexdigest()
