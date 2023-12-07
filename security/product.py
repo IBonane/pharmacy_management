@@ -13,20 +13,8 @@ class Product:
         self.page_size = 10  # Nombre de produits par page
         self.current_page = 1
         self.show_product_management_page()
-
-    def show_product_management_page(self):
-        for widget in self.root.winfo_children():
-            widget.pack_forget()
-
-        self.product_management_page()
-
-        btn_back_home = tk.Button(self.root, text="Retour à l'accueil", command=self.home_page, font=("Helvetica", 12), padx=10, pady=5)
-        btn_back_home.pack(pady=10)
-
-    def product_management_page(self):
-        label_manage_products = tk.Label(self.root, text="Gestion des produits", font=("Helvetica", 16))
-        label_manage_products.pack(pady=10)
-
+        
+    def mytree(self):
         self.tree = ttk.Treeview(self.root, columns=("ID", "Name", "Price", "Quantity"), show="headings")
         self.tree.heading("ID", text="ID")
         self.tree.heading("Name", text="Nom du produit")
@@ -38,6 +26,21 @@ class Product:
         self.tree.column("Price", width=120, anchor=tk.CENTER)
         self.tree.column("Quantity", width=220, anchor=tk.CENTER)
 
+    def show_product_management_page(self):
+        for widget in self.root.winfo_children():
+            widget.pack_forget()
+
+        self.product_management_page()
+
+        self.btn_back_home = tk.Button(self.root, text="Retour à l'accueil", command=self.home_page, font=("Helvetica", 12), padx=10, pady=5)
+        self.btn_back_home.pack(pady=10)
+
+    def product_management_page(self):
+        label_manage_products = tk.Label(self.root, text="Gestion des produits", font=("Helvetica", 16))
+        label_manage_products.pack(pady=10)
+
+        self.mytree()
+
         self.show_products_on_page()
 
         for col in ["ID", "Name", "Price", "Quantity"]:
@@ -45,23 +48,26 @@ class Product:
 
         self.tree.pack(pady=10)
         
-        if self.is_logged_in and self.current_user['is_admin'] == 1:
-
-            btn_add_product = tk.Button(self.root, text="Ajouter un produit", command=self.add_product, font=("Helvetica", 12))
-            btn_add_product.pack(pady=10)
-
-            btn_edit_product = tk.Button(self.root, text="Éditer le produit", command=self.edit_product, font=("Helvetica", 12))
-            btn_edit_product.pack(pady=10)
-
-            btn_delete_product = tk.Button(self.root, text="Supprimer le produit", command=self.delete_product, font=("Helvetica", 12), fg="red")
-            btn_delete_product.pack(pady=10)
+        self.btn_search_product = tk.Button(self.root, text="Rechercher un produit", command=self.show_search_product, font=("Helvetica", 12))
+        self.btn_search_product.pack(pady=10)
 
         # Ajouter des boutons pour naviguer entre les pages
-        btn_prev_page = tk.Button(self.root, text="Page précédente", command=self.show_previous_page, font=("Helvetica", 12))
-        btn_prev_page.pack(pady=10)
+        self.btn_prev_page = tk.Button(self.root, text="Page précédente", command=self.show_previous_page, font=("Helvetica", 12))
+        self.btn_prev_page.pack(pady=10)
 
-        btn_next_page = tk.Button(self.root, text="Page suivante", command=self.show_next_page, font=("Helvetica", 12))
-        btn_next_page.pack(pady=10)
+        self.btn_next_page = tk.Button(self.root, text="Page suivante", command=self.show_next_page, font=("Helvetica", 12))
+        self.btn_next_page.pack(pady=10)
+        
+        if self.is_logged_in and self.current_user['is_admin'] == 1:
+
+            self.btn_add_product = tk.Button(self.root, text="Ajouter un produit", command=self.add_product, font=("Helvetica", 12))
+            self.btn_add_product.pack(pady=10)
+
+            self.btn_edit_product = tk.Button(self.root, text="Éditer le produit", command=self.edit_product, font=("Helvetica", 12))
+            self.btn_edit_product.pack(pady=10)
+
+            self.btn_delete_product = tk.Button(self.root, text="Supprimer le produit", command=self.delete_product, font=("Helvetica", 12), fg="red")
+            self.btn_delete_product.pack(pady=10)
 
     def show_products_on_page(self):
         for item in self.tree.get_children():
@@ -219,6 +225,59 @@ class Product:
 
         # Rediriger vers la page de produits
         self.show_product_management_page()
+
+    def show_product_found(self):
+        self.clear_widgets()
+        self.products_found()
+
+    def products_found(self):
+        self.clear_widgets()
+        
+        label_products_found = tk.Label(self.root, text="Produits trouvés", font=("Helvetica", 16))
+        label_products_found.pack(pady=10)
+
+        # self.tree.delete(*self.tree.get_children())  # Nettoyer le Treeview
+
+        self.mytree()  # Créer un nouveau Treeview
+
+        products = self.search_product()
+        for i, product in enumerate(products):
+            self.tree.insert("", i, values=(product[0], product[1], product[2], product[3]))
+
+        self.tree.pack(pady=10)
+        
+        self.btn_search_product = tk.Button(self.root, text="Rechercher un produit", command=self.show_search_product, font=("Helvetica", 12))
+        self.btn_search_product.pack(pady=10)
+        
+        self.btn_back_user_page = tk.Button(self.root, text="Retour à la liste des produits", command=self.show_product_management_page, font=("Helvetica", 12), padx=10, pady=5)
+        self.btn_back_user_page.pack(pady=10)
+
+    def search_product(self):
+        search = self.entry_search.get()
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT id, name, price, stock FROM products WHERE name LIKE %s ORDER BY name ASC", ('%' + search + '%',))
+        products = cursor.fetchall()
+        return products
+
+    def clear_widgets(self):
+        for widget in self.root.winfo_children():
+            widget.pack_forget()
+        
+    def show_search_product(self):
+        self.clear_widgets()
+
+        # Ajoutez des Entry avec les valeurs par défaut
+        self.label_search = tk.Label(self.root, text="Recherche de produit:", font=("Helvetica", 12))
+        self.entry_search = tk.Entry(self.root, font=("Helvetica", 12))
+    
+        self.label_search.pack(padx=10, pady=10)
+        self.entry_search.pack(padx=10, pady=10)
+        
+        self.btn_search = tk.Button(self.root, text="Rechercher", command=self.products_found, font=("Helvetica", 12), padx=10, pady=5)
+        self.btn_search.pack(pady=10)
+        
+        self.btn_back_user_page = tk.Button(self.root, text="Retour à la liste des produits", command=self.show_product_management_page, font=("Helvetica", 12), padx=10, pady=5)
+        self.btn_back_user_page.pack(pady=10)
 
     def delete_product(self):
         selected_item = self.tree.selection()

@@ -285,10 +285,10 @@ class User:
         btn_delete_product.pack(pady=10)
 
         # Ajouter des boutons pour naviguer entre les pages
-        btn_prev_page = tk.Button(self.root, text="Page précédente", command=self.show_previous_page, font=("Helvetica", 12))
+        btn_prev_page = tk.Button(self.root, text="Page précédente", command=self.show_back_page, font=("Helvetica", 12))
         btn_prev_page.pack(pady=10)
 
-        btn_next_page = tk.Button(self.root, text="Page suivante", command=self.show_next_page, font=("Helvetica", 12))
+        btn_next_page = tk.Button(self.root, text="Page suivante", command=self.show_after_page, font=("Helvetica", 12))
         btn_next_page.pack(pady=10)
 
         btn_back_home = tk.Button(self.root, text="Retour à l'accueil", command=self.home_page, font=("Helvetica", 12), padx=10, pady=5)
@@ -305,12 +305,12 @@ class User:
         for i, pharmacist in enumerate(pharmacists_list[start_index:end_index], start=1):
             self.tree.insert("", i, values=(pharmacist[0], pharmacist[1], pharmacist[2], pharmacist[3], pharmacist[4]))
 
-    def show_previous_page(self):
+    def show_back_page(self):
         if self.current_page > 1:
             self.current_page -= 1
             self.show_pharmacists_list_on_page()
 
-    def show_next_page(self):
+    def show_after_page(self):
         total_pages = -(-len(self.pharmacists_list()) // self.page_size)
         if self.current_page < total_pages:
             self.current_page += 1
