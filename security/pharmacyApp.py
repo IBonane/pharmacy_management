@@ -4,8 +4,9 @@ from product import Product
 
 class PharmacyApp(User, Product):
     def __init__(self, root):
-        User.__init__(self, root)  # Appeler le constructeur de la classe User
-        Product.__init__(self, root)  # Appeler le constructeur de la classe Product
+        # Appeler le constructeur de la classe User et Product
+        User.__init__(self, root)
+        Product.__init__(self, root)
 
 
         self.root = root
@@ -19,7 +20,7 @@ class PharmacyApp(User, Product):
         for widget in self.root.winfo_children():
             widget.pack_forget()
 
-        # Ajuster la taille pour accommoder les nouvelles fonctionnalités
+        # Ajuster la taille
         self.root.geometry("1200x920")
 
         # Éléments de la page d'accueil
@@ -37,6 +38,12 @@ class PharmacyApp(User, Product):
             self.btn_manage_products = tk.Button(self.root, text="Gérer les produits", command=self.show_product_management_page, font=("Helvetica", 12))
             self.btn_manage_products.pack(pady=10)
             
+            self.btn_selling_products = tk.Button(self.root, text="Vendre des produits", command=self.show_product_available, font=("Helvetica", 12))
+            self.btn_selling_products.pack(pady=10)
+            
+            self.btn_histories_products_sold = tk.Button(self.root, text="Statistiques et graphiques des ventes", command=self.show_products_sold_history, font=("Helvetica", 12))
+            self.btn_histories_products_sold.pack(pady=10)
+            
             if self.current_user['is_admin'] == 1:
                 self.btn_manage_products = tk.Button(self.root, text="Gérer les pharmaciens", command=self.pharmacist_management_page, font=("Helvetica", 12))
                 self.btn_manage_products.pack(pady=10)
@@ -50,8 +57,7 @@ class PharmacyApp(User, Product):
             self.btn_login = tk.Button(self.root, text="Se connecter", command=self.show_login_page, font=("Helvetica", 12), padx=10, pady=5)
             self.btn_login.pack(pady=10)
 
-        # Ajouter une image pour rendre la page plus visuelle
-        # (ajoutez votre chemin d'image spécifique)
+        # Ajouter une image
         self.img_pharmacy = tk.PhotoImage(file="pharmacie/assets/img/pharma.png") 
         self.label_image = tk.Label(self.root, image=self.img_pharmacy)
         self.label_image.image = self.img_pharmacy

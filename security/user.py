@@ -137,7 +137,8 @@ class User:
                 
 
             self.current_user = {
-                'firstname':result[1], 
+                'id':result[0],
+                'firstname':result[1],
                 'lastname':result[2], 
                 'is_admin':result[5],
                 'planning': str_planning,
@@ -231,8 +232,6 @@ class User:
 
         # Hacher le mot de passe avant de l'insérer dans la base de données
         hashed_password = hashlib.sha256(new_password.encode()).hexdigest()
-        # old = hashlib.sha256(('admin').encode()).hexdigest()
-        # print(old=="0b47e7b150390fdbd2255a14051797850f839f3ff21bfa2e7a5e33082b41a2e0")
         user = (new_firstname, new_lastname, new_username, hashed_password, self.current_user['email'])
 
         # Vérifier si le nom d'utilisateur existe déjà
