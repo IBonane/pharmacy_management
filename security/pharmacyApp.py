@@ -28,9 +28,13 @@ class PharmacyApp(User, Product):
 
         if self.is_logged_in:
             self.label_welcome.pack(pady=10)
-
-            self.label_status = tk.Label(self.root, text="Connecté en tant qu'utilisateur", font=("Helvetica", 12))
-            self.label_status.pack(pady=10)
+            
+            if self.current_user['is_admin']:
+                self.label_status = tk.Label(self.root, text="Connecté en tant que Pharmacien en Chef", font=("Helvetica", 12))
+                self.label_status.pack(pady=10)
+            else:
+                self.label_status = tk.Label(self.root, text="Connecté en tant que Pharmacien", font=("Helvetica", 12))
+                self.label_status.pack(pady=10)
 
             self.btn_view_profile = tk.Button(self.root, text="Voir le profil", command=self.show_profile, font=("Helvetica", 12))
             self.btn_view_profile.pack(pady=10)

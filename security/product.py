@@ -500,7 +500,7 @@ class Product:
         # Votre liste de données
         data = self.tenBestSeller()
 
-        # Graphique 1: Diagramme à barres pour la quantité des 10 meilleurs produits vendus
+        # Graphique 1: Diagramme à barres pour la quantité des 10 produits les vendus
         products_quantity = defaultdict(int)
 
         for item in data:
@@ -511,7 +511,7 @@ class Product:
         # Création du diagramme à barres
         fig1, ax1 = plt.subplots(figsize=(8, 4))  # Taille ajustée
         ax1.bar(products_quantity.keys(), products_quantity.values())
-        ax1.set_title('Quantité de produits vendus')
+        ax1.set_title('Quantité des 10 produits les vendus')
         ax1.set_xlabel('Produit')
         ax1.set_ylabel('Quantité vendue')
         
