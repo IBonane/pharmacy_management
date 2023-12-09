@@ -477,6 +477,7 @@ class Product:
         return histories
 
     #SECTION GRAPHIQUES DES VENTES
+    #Prendre les 10 produits les plus vendus
     def tenBestSeller(self):
         cursor = self.conn.cursor()
         cursor.execute(
@@ -487,6 +488,20 @@ class Product:
                 GROUP BY p.name
                 ORDER BY stock DESC
                 LIMIT 10
+            """
+        )
+        bestSeller = cursor.fetchall()
+        return bestSeller
+    #Evolution des ventes de tous les produits par jour
+    def allSaleByDay(self):
+        cursor = self.conn.cursor()
+        cursor.execute(
+            """
+                SELECT sum(quantity_sold) as quantity_sold, sold_at
+                FROM sale AS s
+                INNER JOIN products AS p ON p.id = s.id_product
+                GROUP BY sold_at
+                ORDER BY stock DESC
             """
         )
         bestSeller = cursor.fetchall()
@@ -511,21 +526,23 @@ class Product:
         # Création du diagramme à barres
         fig1, ax1 = plt.subplots(figsize=(8, 4))  # Taille ajustée
         ax1.bar(products_quantity.keys(), products_quantity.values())
-        ax1.set_title('Quantité des 10 produits les vendus')
+        ax1.set_title('Les 10 produits les plus vendus')
         ax1.set_xlabel('Produit')
         ax1.set_ylabel('Quantité vendue')
-        
-        # Utilisez set_xticklabels pour la rotation des étiquettes
+
+        # Utilisez set_xticks et set_xticklabels pour définir les positions des étiquettes
+        ax1.set_xticks(range(len(products_quantity)))
         ax1.set_xticklabels(products_quantity.keys(), rotation=45, ha='right') 
         
         plt.tight_layout(pad=3.0) 
 
         # Graphique 2: Graphique linéaire pour l'évolution des 10 meilleurs produits vendus par jours
+        allData = self.allSaleByDay()
         sales_by_day = defaultdict(int)
 
-        for item in data:
-            sales_date = item[2].date()
-            quantity_sold = item[1]
+        for item in allData:
+            sales_date = item[1].date()
+            quantity_sold = item[0]
             sales_by_day[sales_date] += quantity_sold
 
         # Tri des données par date
@@ -534,13 +551,11 @@ class Product:
         # Création du graphique linéaire
         fig2, ax2 = plt.subplots(figsize=(8, 4))  # Taille ajustée
         dates, quantities = zip(*sorted_sales)
-        ax2.plot(dates, quantities, marker='o')
+        formatted_dates = [date.strftime('%d-%m-%Y') for date in dates]
+        ax2.plot(formatted_dates, quantities, marker='o')
         ax2.set_title('Évolution des ventes en fonction des jours')
         ax2.set_xlabel('Date')
-        ax2.set_ylabel('Quantité vendue')
-
-        # Utilisez set_xticklabels pour la rotation des étiquettes
-        ax2.set_xticklabels(dates, rotation=45, ha='right')  
+        ax2.set_ylabel('Quantité vendue')        
 
         # Ajustements pour éviter le chevauchement
         plt.tight_layout(pad=3.0)

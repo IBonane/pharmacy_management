@@ -60,15 +60,15 @@ class PharmacyApp(User, Product):
 
             self.btn_login = tk.Button(self.root, text="Se connecter", command=self.show_login_page, font=("Helvetica", 12), padx=10, pady=5)
             self.btn_login.pack(pady=10)
+            
+        self.btn_quit = tk.Button(self.root, text="Quitter", command=self.root.destroy, font=("Helvetica", 12), padx=10, pady=5)
+        self.btn_quit.pack(pady=30)
 
         # Ajouter une image
         self.img_pharmacy = tk.PhotoImage(file="pharmacie/assets/img/pharma.png") 
         self.label_image = tk.Label(self.root, image=self.img_pharmacy)
         self.label_image.image = self.img_pharmacy
         self.label_image.pack(pady=20)
-        
-        self.btn_quit = tk.Button(self.root, text="Quitter", command=self.root.destroy, font=("Helvetica", 12), padx=10, pady=5)
-        self.btn_quit.pack(pady=30)
 
         # Ajouter un effet de survol sur les boutons
         self.btn_register.bind("<Enter>", lambda e: self.btn_register.config(bg="#7fcce5"))

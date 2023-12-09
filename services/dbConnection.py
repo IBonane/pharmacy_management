@@ -17,7 +17,7 @@ def dbconnection(mysql_connector, params_connection):
     
         print("""\nConnection à la base de donnée 'pharmacie' non établie.
               veuillez vérifier votre fichier config.py et vous assurer que mysql est bien démarré
-              ou que la base de donnée 'pharmacie exist.'"""
+              ou que la base de donnée 'pharmacie' exist."""
         )
         sys.exit(0)
 
